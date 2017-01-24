@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public enum direction {forward, back, left, right};
 
 [System.Serializable]
-public struct Orientation {
+public struct RoadTileOrientation {
     public direction entance;
     public Vector3 rotation;
     public Vector3 offset;
@@ -25,7 +25,7 @@ public struct RoadTileExit {
 }
 
 public class RoadTile : MonoBehaviour {
-    public List<Orientation> orientations = new List<Orientation>();
+    public List<RoadTileOrientation> orientations = new List<RoadTileOrientation>();
     public List<RoadTilePath> paths = new List<RoadTilePath>();
     public List<RoadTileExit> exits = new List<RoadTileExit>();
     public RoadTileExit userExit;

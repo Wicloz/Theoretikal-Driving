@@ -9,20 +9,42 @@ public class TileListItem {
     public int chance = 50;
 }
 
-[System.Serializable]
-public struct RoadTreeNode {
+public class RoadTreeNode {
     public GameObject tile;
-    public List<GameObject> children;
+    public List<GameObject> children = new List<GameObject>();
+    public void Remove () {
+        foreach (GameObject child in children) {
+            GameObject.Destroy(child);
+        }
+        GameObject.Destroy(tile);
+    }
 }
 
 public class RoadController : MonoBehaviour {
     public List<TileListItem> prefabTileList = new List<TileListItem>();
-    public List<RoadTreeNode> roadTiles = new List<RoadTreeNode>();
+    private List<RoadTreeNode> roadTiles = new List<RoadTreeNode>();
     private int maxSpeed = 50;
+    public GameObject lastTileHit = null;
 
-    public void Update () {
-        if (roadTiles.Count < 20)
+    void Awake () {
+        RoadTreeNode node = new RoadTreeNode();
+        node.tile = GameObject.Find("StartRoad");
+        roadTiles.Add(node);
+    }
+
+    void Update () {
+        if (!CarRayCaster._static.FrontViewFull())
             SpawnNextTile();
+
+        GameObject hitTile = CarRayCaster._static.TileStraightBack();
+        if (lastTileHit != null && lastTileHit != hitTile) {
+            foreach (RoadTreeNode item in roadTiles) {
+                item.Remove();
+                if (item.tile == lastTileHit)
+                    break;
+            }
+        }
+        lastTileHit = hitTile;
     } 
 
     private void SpawnNextTile () {
@@ -33,7 +55,7 @@ public class RoadController : MonoBehaviour {
         foreach (TileListItem item in prefabTileList) {
             totalChance += item.chance;
         }
-        int randomChance = Random.Range(0, totalChance);
+        int randomChance = Random.Range(0, totalChance + 1);
         GameObject nextTile = null;
         RoadTile nextTileScript = null;
         foreach (TileListItem item in prefabTileList) {
@@ -44,7 +66,7 @@ public class RoadController : MonoBehaviour {
                 break;
             }
         }
-        Orientation orientation = nextTileScript.orientations[Random.Range(0, nextTileScript.orientations.Count - 1)];
+        RoadTileOrientation orientation = nextTileScript.orientations[Random.Range(0, nextTileScript.orientations.Count)];
 
         nextTile = Instantiate(
             nextTile, 
@@ -75,10 +97,6 @@ public class RoadController : MonoBehaviour {
 
     private Vector3 RotateOffset (Vector3 offset, Vector3 rotation) {
         float radians = Mathf.Deg2Rad * (rotation.y + rotation.z);
-        return new Vector3(
-            offset.x * Mathf.Cos(radians) + offset.z * Mathf.Sin(radians),
-            offset.y,
-            -1 * offset.x * Mathf.Sin(radians) + offset.z * Mathf.Cos(radians)
-        );
+        return offset.RotateAroundY(radians);
     }
 }
