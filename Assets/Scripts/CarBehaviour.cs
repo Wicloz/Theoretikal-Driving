@@ -10,12 +10,14 @@ public struct PathNode {
 }
 
 public class CarBehaviour : MonoBehaviour {
+    public static CarBehaviour _static = null;
     private CarController carScript;
     private Rigidbody carRigid;
     public List<PathNode> path = new List<PathNode>();
     private bool breakToTarget = false;
 
 	void Awake () {
+        _static = this;
         carScript = GetComponent<CarController>();
         carRigid = GetComponent<Rigidbody>();
     }
@@ -40,7 +42,8 @@ public class CarBehaviour : MonoBehaviour {
         look.transform.position = currentTransform.position;
         look.transform.rotation = currentTransform.rotation;
         look.transform.LookAt(targetTransform);
-        float direction = look.transform.rotation.eulerAngles.y - currentTransform.transform.eulerAngles.y;
+        float direction = Mathf.Sin(Mathf.Deg2Rad * (look.transform.rotation.eulerAngles.y - currentTransform.rotation.eulerAngles.y));
+        Destroy(look);
         float speed = targetSpeed - currentSpeed;
 
         carScript.Move(direction, Mathf.Max(0, speed), breakToTarget ? -1 : 0, 0);
