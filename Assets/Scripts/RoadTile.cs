@@ -11,6 +11,13 @@ public struct orientation {
     public Vector3 offset;
 }
 
+[Serializable]
+public struct RoadTilePath {
+    public direction entrance;
+    public direction exit;
+    public List<GameObject> ghosts;
+}
+
 public class RoadTile : MonoBehaviour {
     public List<orientation> orientations = new List<orientation>();
     public List<RoadTilePath> paths = new List<RoadTilePath>();
@@ -18,14 +25,4 @@ public class RoadTile : MonoBehaviour {
 
     private int maxspeed;
     private Dictionary<direction, RoadTile> links = new Dictionary<direction, RoadTile>();
-
-    // Use this for initialization
-    void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 }
