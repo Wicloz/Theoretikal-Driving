@@ -28,14 +28,14 @@ public class RoadTreeNode {
 
 public class RoadController : MonoBehaviour {
     public List<TileListItem> prefabTileList = new List<TileListItem>();
-    private List<RoadTreeNode> roadTiles = new List<RoadTreeNode>();
+    private List<RoadTreeNode> roadTree = new List<RoadTreeNode>();
     private int maxSpeed = 30;
     private GameObject lastTileHit = null;
 
     void Awake () {
         GameObject startRoad = GameObject.Find("StartRoad");
         startRoad.GetComponent<RoadTile>().SetUserExit(direction.forward);
-        roadTiles.Add(new RoadTreeNode(startRoad));
+        roadTree.Add(new RoadTreeNode(startRoad));
     }
 
     void Update () {
@@ -44,7 +44,7 @@ public class RoadController : MonoBehaviour {
 
         GameObject hitTile = CarRayCaster._static.TileStraightBack();
         if (lastTileHit != null && lastTileHit != hitTile) {
-            foreach (RoadTreeNode item in roadTiles) {
+            foreach (RoadTreeNode item in roadTree) {
                 item.Remove();
                 if (item.tile == lastTileHit)
                     break;
@@ -54,7 +54,7 @@ public class RoadController : MonoBehaviour {
     } 
 
     private void SpawnNextTile () {
-        GameObject lastTile = roadTiles[roadTiles.Count - 1].tile;
+        GameObject lastTile = roadTree[roadTree.Count - 1].tile;
         RoadTile lastTileScript = lastTile.GetComponent<RoadTile>();
 
         int totalChance = 0;
@@ -86,7 +86,7 @@ public class RoadController : MonoBehaviour {
         nextTileScript.SetUserExit(userPath.exit);
 
         RoadTreeNode nextNode = new RoadTreeNode(nextTile);
-        roadTiles.Add(nextNode);
+        roadTree.Add(nextNode);
     }
 
     private void AddToUserPath(List<GameObject> ghosts, int speed) {

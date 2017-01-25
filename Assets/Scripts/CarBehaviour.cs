@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using UnityStandardAssets.Vehicles.Car;
-using System;
 
-[Serializable]
+[System.Serializable]
 public struct PathNode {
     public GameObject ghost;
     public float targetspeed;
