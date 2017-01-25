@@ -25,10 +25,19 @@ public struct RoadTileExit {
     public List<GameObject> topShields;
 }
 
+[System.Serializable]
+public class RoadTileEvent {
+    public EventMain eventScript;
+    [Range(0, 100)]
+    public int chance = 50;
+}
+
 public class RoadTile : MonoBehaviour {
     public List<RoadTileOrientation> orientations = new List<RoadTileOrientation>();
     public List<RoadTilePath> paths = new List<RoadTilePath>();
     public List<RoadTileExit> exits = new List<RoadTileExit>();
+    public List<RoadTileEvent> events = new List<RoadTileEvent>();
+    public bool eventMandatory = false;
     private RoadTileExit _userExit;
     public RoadTileExit userExit {
         get {
@@ -55,5 +64,21 @@ public class RoadTile : MonoBehaviour {
                 break;
             }
         }
+    }
+
+    public EventMain GetRandomEvent () {
+        int totalChance = 0;
+        foreach (RoadTileEvent item in events) {
+            totalChance += item.chance;
+        }
+
+        int randomChance = Random.Range(0, totalChance + 1);
+        foreach (RoadTileEvent item in events) {
+            randomChance -= item.chance;
+            if (randomChance <= 0)
+                return item.eventScript;
+        }
+
+        return null;
     }
 }
