@@ -6,7 +6,7 @@ public class TileListItem {
     public GameObject tile;
     public RoadTile tileScript;
     [Range(0, 100)]
-    public int chance = 50;
+    public int chance = 30;
 }
 
 public class RoadTreeNode {
@@ -23,8 +23,8 @@ public class RoadTreeNode {
 public class RoadController : MonoBehaviour {
     public List<TileListItem> prefabTileList = new List<TileListItem>();
     private List<RoadTreeNode> roadTiles = new List<RoadTreeNode>();
-    private int maxSpeed = 50;
-    public GameObject lastTileHit = null;
+    private int maxSpeed = 30;
+    private GameObject lastTileHit = null;
 
     void Awake () {
         RoadTreeNode node = new RoadTreeNode();

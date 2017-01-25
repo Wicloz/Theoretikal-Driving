@@ -22,6 +22,7 @@ public struct RoadTileExit {
     public direction dir;
     public Vector3 rotation;
     public Vector3 offset;
+    public List<GameObject> topShields;
 }
 
 public class RoadTile : MonoBehaviour {
@@ -43,6 +44,9 @@ public class RoadTile : MonoBehaviour {
         foreach (RoadTileExit item in exits) {
             if (item.dir == exit) {
                 userExit = item;
+                foreach (GameObject shield in item.topShields) {
+                    Destroy(shield);
+                }
                 break;
             }
         }
