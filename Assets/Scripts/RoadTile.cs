@@ -29,7 +29,12 @@ public class RoadTile : MonoBehaviour {
     public List<RoadTileOrientation> orientations = new List<RoadTileOrientation>();
     public List<RoadTilePath> paths = new List<RoadTilePath>();
     public List<RoadTileExit> exits = new List<RoadTileExit>();
-    public RoadTileExit userExit;
+    private RoadTileExit _userExit;
+    public RoadTileExit userExit {
+        get {
+            return _userExit;
+        }
+    }
 
     public RoadTilePath GetRandomPath (direction entrance) {
         List<RoadTilePath> validPaths = new List<RoadTilePath>();
@@ -43,7 +48,7 @@ public class RoadTile : MonoBehaviour {
     public void SetUserExit (direction exit) {
         foreach (RoadTileExit item in exits) {
             if (item.dir == exit) {
-                userExit = item;
+                _userExit = item;
                 foreach (GameObject shield in item.topShields) {
                     Destroy(shield);
                 }

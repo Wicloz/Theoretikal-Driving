@@ -6,7 +6,8 @@ public class CarRayCaster : MonoBehaviour {
     public static CarRayCaster _static = null;
 
     void Awake () {
-        _static = this;
+        if (_static == null)
+            _static = this;
     }
 
     public GameObject TileStraightBack () {
@@ -23,7 +24,7 @@ public class CarRayCaster : MonoBehaviour {
         return null;
     }
 
-    public List<GameObject> TilesFOVfront (bool addSky = false) {
+    public List<GameObject> TilesMultiFront (bool addSky = false) {
         List<GameObject> hits = new List<GameObject>();
 
         for (float i = -1; i <= 1; i += 0.05f) {
@@ -48,6 +49,6 @@ public class CarRayCaster : MonoBehaviour {
     }
 
     public bool FrontViewFull () {
-        return !TilesFOVfront(true).Contains(null);
+        return !TilesMultiFront(true).Contains(null);
     }
 }

@@ -6,12 +6,18 @@ public class TileListItem {
     public GameObject tile;
     public RoadTile tileScript;
     [Range(0, 100)]
-    public int chance = 30;
+    public int chance = 50;
 }
 
 public class RoadTreeNode {
     public GameObject tile;
     public List<GameObject> children = new List<GameObject>();
+
+    public RoadTreeNode () { }
+    public RoadTreeNode (GameObject tile) {
+        this.tile = tile;
+    }
+
     public void Remove () {
         foreach (GameObject child in children) {
             GameObject.Destroy(child);
@@ -27,9 +33,9 @@ public class RoadController : MonoBehaviour {
     private GameObject lastTileHit = null;
 
     void Awake () {
-        RoadTreeNode node = new RoadTreeNode();
-        node.tile = GameObject.Find("StartRoad");
-        roadTiles.Add(node);
+        GameObject startRoad = GameObject.Find("StartRoad");
+        startRoad.GetComponent<RoadTile>().SetUserExit(direction.forward);
+        roadTiles.Add(new RoadTreeNode(startRoad));
     }
 
     void Update () {
@@ -79,8 +85,7 @@ public class RoadController : MonoBehaviour {
         AddToUserPath(userPath.ghosts, maxSpeed);
         nextTileScript.SetUserExit(userPath.exit);
 
-        RoadTreeNode nextNode = new RoadTreeNode();
-        nextNode.tile = nextTile;
+        RoadTreeNode nextNode = new RoadTreeNode(nextTile);
         roadTiles.Add(nextNode);
     }
 
