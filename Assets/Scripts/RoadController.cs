@@ -11,7 +11,7 @@ public class TileListItem {
 
 [System.Serializable]
 public class RoadTileHit {
-    private int initTimeout = 30;
+    private int initTimeout = 60;
     public GameObject tile;
     public int timeout;
 
@@ -52,15 +52,23 @@ public class RoadTreeNode {
 
 public class RoadController : MonoBehaviour {
     public List<TileListItem> prefabTileList = new List<TileListItem>();
-    private List<RoadTreeNode> roadTree = new List<RoadTreeNode>();
-    public List<RoadTileHit> tilesHit = new List<RoadTileHit>();
     public int eventDelay = 5;
-    private int currentEventDelay = 5;
+    public int zoneSwitchDelayMin = 6;
+    public int zoneSwitchDelayMax = 14;
+
+    private List<RoadTileHit> tilesHit = new List<RoadTileHit>();
+    private List<RoadTreeNode> roadTree = new List<RoadTreeNode>();
+    private int currentEventDelay;
+    private int currentZoneSwitchDelay;
     private trafficzone currentTrafficZone = trafficzone.woonwijk;
 
     void Awake () {
+        currentEventDelay = eventDelay;
+        ResetZoneSwitchDelay();
         GameObject startRoad = GameObject.Find("StartRoad");
-        startRoad.GetComponent<RoadTile>().SetUserExit(direction.forward);
+        RoadTile startRoadScript = startRoad.GetComponent<RoadTile>();
+        startRoadScript.SetUserExit(direction.forward);
+        AddToUserPath(startRoadScript.GetRandomPath(direction.back).ghosts);
         roadTree.Add(new RoadTreeNode(startRoad));
     }
 
@@ -85,9 +93,7 @@ public class RoadController : MonoBehaviour {
         bool deleted = false;
         for (int i = 0; i < tilesHit.Count; i++) {
             tilesHit[i].timeout--;
-
             if (!deleted && tilesHit[i].timeout < 0) {
-                
                 if (tilesHit[i].tile != null) {
                     foreach (RoadTreeNode node in roadTree) {
                         node.Remove();
@@ -95,7 +101,6 @@ public class RoadController : MonoBehaviour {
                             break;
                     }
                 }
-
                 tilesHit.RemoveAt(i);
                 deleted = true;
             }
@@ -103,6 +108,22 @@ public class RoadController : MonoBehaviour {
     } 
 
     private void SpawnNextTile () {
+        if (currentZoneSwitchDelay <= 0) {
+            if (currentTrafficZone == trafficzone.woonwijk)
+                currentTrafficZone++;
+            else if (currentTrafficZone == trafficzone.onbebouwd)
+                currentTrafficZone--;
+            else {
+                if (Random.Range(0, 2) == 0)
+                    currentTrafficZone++;
+                else
+                    currentTrafficZone--;
+            }
+            ResetZoneSwitchDelay();
+        } else {
+            currentZoneSwitchDelay--;
+        }
+
         GameObject lastTile = roadTree[roadTree.Count - 1].tile;
         RoadTile lastTileScript = lastTile.GetComponent<RoadTile>();
 
@@ -130,6 +151,7 @@ public class RoadController : MonoBehaviour {
         );
         nextTileScript = nextTile.GetComponent<RoadTile>();
 
+        nextTileScript.SetTrafficZone(currentTrafficZone);
         RoadTilePath userPath = nextTileScript.GetRandomPath(orientation.entance);
         AddToUserPath(userPath.ghosts);
         nextTileScript.SetUserExit(userPath.exit);
@@ -138,26 +160,22 @@ public class RoadController : MonoBehaviour {
         roadTree.Add(nextNode);
 
         if ((nextNode.tileScript.eventMandatory || currentEventDelay <= 0) && nextNode.tileScript.events.Count > 0) {
-            HandleTileEvent(nextNode);
+            nextNode.tile.AddComponent(nextNode.tileScript.GetRandomEvent().GetType());
             currentEventDelay = eventDelay;
         } else {
             currentEventDelay--;
         }
     }
 
-    private void HandleTileEvent (RoadTreeNode node) {
-        node.tile.AddComponent(node.tileScript.GetRandomEvent().GetType());
+    private void AddToUserPath(List<GameObject> ghosts) {
+        foreach (GameObject item in ghosts) {
+            PathNode node = new PathNode(currentTrafficZone, item, currentTrafficZone.MaxSpeed());
+            CarBehaviour._static.AddToPath(node);
+        }
     }
 
-    private void AddToUserPath(List<GameObject> ghosts) {
-        float targetspeed = currentTrafficZone.MaxSpeed();
-
-        List<PathNode> path = new List<PathNode>();
-        foreach (GameObject item in ghosts) {
-            PathNode node = new PathNode(currentTrafficZone, item, targetspeed);
-            path.Add(node);
-        }
-        CarBehaviour._static.path.AddRange(path);
+    private void ResetZoneSwitchDelay () {
+        currentZoneSwitchDelay = Random.Range(zoneSwitchDelayMin, zoneSwitchDelayMax + 1);
     }
 
     private Vector3 RotateOffset (Vector3 offset, Vector3 rotation) {

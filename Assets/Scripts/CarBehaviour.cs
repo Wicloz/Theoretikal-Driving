@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityStandardAssets.Vehicles.Car;
 
-public enum trafficzone {woonwijk, dertig, bebouwd, onbebouwd, snelweg};
+public enum trafficzone {woonwijk, dertig, bebouwd, onbebouwd};
 
 [System.Serializable]
 public struct PathNode {
@@ -29,7 +29,7 @@ public class CarBehaviour : MonoBehaviour {
     private Rigidbody carRigid;
     private MeshRenderer carSpeedHud;
 
-    public List<PathNode> path = new List<PathNode>();
+    private List<PathNode> path = new List<PathNode>();
     private bool breakToTarget = false;
 
     public float breakTreshhold = 42;
@@ -82,6 +82,14 @@ public class CarBehaviour : MonoBehaviour {
             path.RemoveAt(0);
             SetSpeedHud();
         }
+    }
+
+    public void AddToPath (List<PathNode> newNodes) {
+        path.AddRange(newNodes);
+    }
+
+    public void AddToPath (PathNode newNode) {
+        path.Add(newNode);
     }
 
     private void SetSpeedHud () {

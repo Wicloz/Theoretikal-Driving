@@ -19,8 +19,6 @@ public static class ExtensionMethods {
                 return 50;
             case trafficzone.onbebouwd:
                 return 80;
-            case trafficzone.snelweg:
-                return 130;
             default:
                 return -1;
         }
