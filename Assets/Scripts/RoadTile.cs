@@ -15,6 +15,7 @@ public struct RoadTilePath {
     public direction entrance;
     public direction exit;
     public List<GameObject> ghosts;
+    public int maxSpeed;
 }
 
 [System.Serializable]
@@ -39,6 +40,7 @@ public class RoadTile : MonoBehaviour {
     public List<RoadTileExit> exits = new List<RoadTileExit>();
     public List<RoadTileEvent> events = new List<RoadTileEvent>();
     public bool eventMandatory = false;
+
     private trafficzone _trafficZone;
     public trafficzone trafficZone {
         get {
@@ -49,6 +51,12 @@ public class RoadTile : MonoBehaviour {
     public RoadTileExit userExit {
         get {
             return _userExit;
+        }
+    }
+    private RoadTileExit _userEntrance;
+    public RoadTileExit userEntrance {
+        get {
+            return _userEntrance;
         }
     }
 
@@ -64,14 +72,26 @@ public class RoadTile : MonoBehaviour {
         }
     }
 
+    public void SetUserEntrance (direction entrance) {
+        foreach (RoadTileExit item in exits) {
+            if (item.dir == entrance) {
+                _userEntrance = item;
+                foreach (GameObject shield in item.topShields) {
+                    Destroy(shield);
+                }
+                break;
+            }
+        }
+    }
+
     public void SetTrafficZone (trafficzone trafficZone) {
         _trafficZone = trafficZone;
     }
 
-    public RoadTilePath GetRandomPath (direction entrance) {
+    public RoadTilePath GetRandomPath (direction entrance, int speed) {
         List<RoadTilePath> validPaths = new List<RoadTilePath>();
         foreach (RoadTilePath item in paths) {
-            if (item.entrance == entrance)
+            if (item.entrance == entrance && item.maxSpeed >= speed)
                 validPaths.Add(item);
         }
         return validPaths[Random.Range(0, validPaths.Count)];

@@ -11,16 +11,22 @@ public class CarRayCaster : MonoBehaviour {
 
     public GameObject TileStraightBack () {
         RaycastHit hit;
-        Debug.DrawRay(transform.position, transform.forward * -999);
+        GameObject parent = null;
+        float length = 999;
+
         if (Physics.Raycast(transform.position, transform.forward * -1, out hit)) {
+            length = hit.distance;
             try {
-                GameObject parent = hit.collider.transform.parent.gameObject;
-                if (parent.tag == "Road Tile")
-                    return parent;
+                GameObject thisParent = hit.collider.transform.parent.gameObject;
+                if (thisParent.tag == "Road Tile")
+                    parent = thisParent;
             }
             catch {}
         }
-        return null;
+
+        Debug.DrawRay(transform.position, transform.forward * -1 * length);
+
+        return parent;
     }
 
     public List<GameObject> TilesMultiFront (bool addSky = false) {
@@ -29,9 +35,10 @@ public class CarRayCaster : MonoBehaviour {
         for (float i = -1; i <= 1; i += 0.05f) {
             Vector3 direction = transform.forward.RotateAroundY(i);
             RaycastHit hit;
-            Debug.DrawRay(transform.position, direction * 999);
+            float length = 999;
 
             if (Physics.Raycast(transform.position, direction, out hit)) {
+                length = hit.distance;
                 try {
                     GameObject parent = hit.collider.transform.parent.gameObject;
                     if (parent.tag == "Road Tile")
@@ -42,6 +49,8 @@ public class CarRayCaster : MonoBehaviour {
             else if (addSky) {
                 hits.Add(null);
             }
+
+            Debug.DrawRay(transform.position, direction * length);
         }
 
         return hits;
