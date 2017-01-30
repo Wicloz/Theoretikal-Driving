@@ -174,9 +174,10 @@ public class RoadController : MonoBehaviour {
     private void SetTileEvent (RoadTreeNode node) {
         // Get event if needed
         EventMain tileEvent = null;
-        if ((node.tileScript.eventMandatory || currentEventDelay <= 0) && node.tileScript.events.Count > 0) {
-            tileEvent = node.tileScript.GetRandomEvent();
-            node.tile.AddComponent(tileEvent.GetType());
+        if (currentEventDelay <= 0 && node.tileScript.events.Count > 0) {
+            EventMain prefab = node.tileScript.GetRandomEvent();
+            node.tile.AddComponent(prefab.GetType());
+            tileEvent = (EventMain) node.tile.GetComponent(prefab.GetType());
             tileEvent.SetUp(node);
             currentEventDelay = eventDelay;
         }
@@ -195,10 +196,12 @@ public class RoadController : MonoBehaviour {
     }
 
     private void AddToUserPath(RoadTilePath path) {
+        List<PathNode> thisPath = new List<PathNode>();
         foreach (GameObject item in path.ghosts) {
             PathNode node = new PathNode(currentTrafficZone, item, Mathf.Min(path.maxSpeed, currentTrafficZone.MaxSpeed()));
-            CarBehaviour._static.AddToPath(node);
+            thisPath.Add(node);
         }
+        CarBehaviour._static.AddToPath(thisPath);
     }
 
     private void ResetZoneSwitchDelay () {

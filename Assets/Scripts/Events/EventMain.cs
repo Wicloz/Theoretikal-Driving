@@ -9,6 +9,7 @@ public class EventMain : MonoBehaviour {
         }
     }
     protected RoadTreeNode roadNode;
+    protected List<PathNode> userPathNodes = new List<PathNode>();
 
     public void SetUp (RoadTreeNode node) {
         roadNode = node;
@@ -32,7 +33,8 @@ public class EventMain : MonoBehaviour {
         // Add the path to the user car
         foreach (GameObject item in userPath.ghosts) {
             PathNode node = new PathNode(roadNode.tileScript.trafficZone, item, Mathf.Min(userPath.maxSpeed, roadNode.tileScript.trafficZone.MaxSpeed()));
-            CarBehaviour._static.AddToPath(node);
+            userPathNodes.Add(node);
         }
+        CarBehaviour._static.AddToPath(userPathNodes);
     }
 }

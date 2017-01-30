@@ -39,7 +39,6 @@ public class RoadTile : MonoBehaviour {
     public List<RoadTilePath> paths = new List<RoadTilePath>();
     public List<RoadTileExit> exits = new List<RoadTileExit>();
     public List<RoadTileEvent> events = new List<RoadTileEvent>();
-    public bool eventMandatory = false;
 
     private trafficzone _trafficZone;
     public trafficzone trafficZone {

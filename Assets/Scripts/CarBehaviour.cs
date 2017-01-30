@@ -30,7 +30,16 @@ public class CarBehaviour : MonoBehaviour {
     private Rigidbody carRigid;
     private MeshRenderer carZoneHud;
     private Text carSpeedHud;
-    private List<PathNode> path = new List<PathNode>();
+    private List<List<PathNode>> pathNested = new List<List<PathNode>>();
+    private List<PathNode> pathFlat {
+        get {
+            List<PathNode> path = new List<PathNode>();
+            foreach (List<PathNode> item in pathNested) {
+                path.AddRange(item);
+            }
+            return path;
+        }
+    }
     private bool breakToTarget = false;
 
     public float breakTreshhold = 42;
@@ -51,15 +60,15 @@ public class CarBehaviour : MonoBehaviour {
     }
 
     void FixedUpdate () {
-        if (path.Count > 0) {
+        if (pathFlat.Count > 0) {
             Transform currentTransform = gameObject.transform;
             float currentSpeed = carRigid.velocity.magnitude / realSpeedMult;
 
-            Transform targetTransform = path[0].ghost.transform;
-            float targetSpeed = path[0].targetSpeed;
+            Transform targetTransform = pathFlat[0].ghost.transform;
+            float targetSpeed = pathFlat[0].targetSpeed;
             for (int i = 1; i < 5; i++) {
-                if (path.Count > i && Vector3.Distance(path[i].ghost.transform.position, currentTransform.position) < (currentSpeed - path[i].targetSpeed) * 3)
-                    targetSpeed = Mathf.Min(targetSpeed, path[i].targetSpeed);
+                if (pathFlat.Count > i && Vector3.Distance(pathFlat[i].ghost.transform.position, currentTransform.position) < (currentSpeed - pathFlat[i].targetSpeed) * 3)
+                    targetSpeed = Mathf.Min(targetSpeed, pathFlat[i].targetSpeed);
             }
 
             float acceleration = targetSpeed - currentSpeed;
@@ -88,16 +97,18 @@ public class CarBehaviour : MonoBehaviour {
     }
 
     void OnTriggerEnter (Collider other) {
-        if (path.Count > 0 && other.gameObject == path[0].ghost) {
-            path.RemoveAt(0);
+        if (pathFlat.Count > 0 && other.gameObject == pathFlat[0].ghost) {
+            pathNested[0].RemoveAt(0);
+            if (pathNested[0].Count == 0)
+                pathNested.RemoveAt(0);
             SetZoneHud();
         }
     }
 
     private void SetZoneHud () {
         float maxSpeed = 0;
-        if (path.Count > 0)
-            maxSpeed = path[0].trafficZone.MaxSpeed();
+        if (pathFlat.Count > 0)
+            maxSpeed = pathFlat[0].trafficZone.MaxSpeed();
 
         int bestSingIndex = -1;
         for (int i = 0; i < speedSigns.Count; i++) {
@@ -115,10 +126,6 @@ public class CarBehaviour : MonoBehaviour {
     }
 
     public void AddToPath (List<PathNode> newNodes) {
-        path.AddRange(newNodes);
-    }
-
-    public void AddToPath (PathNode newNode) {
-        path.Add(newNode);
+        pathNested.Add(newNodes);
     }
 }
