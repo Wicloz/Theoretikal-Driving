@@ -116,9 +116,8 @@ public class CarBehaviour : MonoBehaviour {
                 bestSingIndex = i;
         }
 
-        if (bestSingIndex >= 0) {
+        if (bestSingIndex >= 0)
             carZoneHud.material = speedSigns[bestSingIndex].mat;
-        }
     }
 
     private void SetSpeedHud () {

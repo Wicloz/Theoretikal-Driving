@@ -59,6 +59,33 @@ public class RoadTile : MonoBehaviour {
         }
     }
 
+    private Vector3 GetWorldSignPos (RoadTileExit exit, direction side) {
+        Vector3 position = transform.position + exit.offset.RotateOffset(transform.rotation.eulerAngles);
+        if (side == direction.right)
+            position += new Vector3(6, 0, 0).RotateOffset(exit.rotation + transform.rotation.eulerAngles);
+        else if (side == direction.left)
+            position += new Vector3(-6, 0, 0).RotateOffset(exit.rotation + transform.rotation.eulerAngles);
+        return position;
+    }
+
+    private Quaternion GetWorldSignRot (RoadTileExit exit, direction side) {
+        Vector3 rotation = transform.rotation.eulerAngles + exit.rotation + new Vector3(90, 0, 0);
+        if (side == direction.left)
+            rotation.y += 180;
+        return Quaternion.Euler(rotation);
+    }
+
+    public void SpawnTrafficSign (GameObject sign, direction exit, direction side) {
+        RoadTileExit betterExit = new RoadTileExit();
+        foreach (RoadTileExit item in exits) {
+            if (exit == item.dir) {
+                betterExit = item;
+                break;
+            }
+        }
+        Instantiate(sign, GetWorldSignPos(betterExit, side), GetWorldSignRot(betterExit, side), transform);
+    }
+
     public void SetUserExit (direction exit) {
         foreach (RoadTileExit item in exits) {
             if (item.dir == exit) {

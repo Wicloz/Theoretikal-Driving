@@ -1,12 +1,17 @@
 ﻿using UnityEngine;
 
 public static class ExtensionMethods {
-    public static Vector3 RotateAroundY (this Vector3 offset, float radians) {
+    public static Vector3 RotateAroundY (this Vector3 input, float radians) {
         return new Vector3(
-            offset.x * Mathf.Cos(radians) + offset.z * Mathf.Sin(radians),
-            offset.y,
-            -1 * offset.x * Mathf.Sin(radians) + offset.z * Mathf.Cos(radians)
+            input.x * Mathf.Cos(radians) + input.z * Mathf.Sin(radians),
+            input.y,
+            -1 * input.x * Mathf.Sin(radians) + input.z * Mathf.Cos(radians)
         );
+    }
+
+    public static Vector3 RotateOffset (this Vector3 input, Vector3 rotation) {
+        float radians = Mathf.Deg2Rad * (rotation.y + rotation.z);
+        return input.RotateAroundY(radians);
     }
 
     public static int MaxSpeed (this trafficzone trafficZone) {

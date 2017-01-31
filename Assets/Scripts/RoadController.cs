@@ -10,6 +10,12 @@ public class TileListItem {
 }
 
 [System.Serializable]
+public class SpeedSignItem {
+    public GameObject sign;
+    public int speed;
+}
+
+[System.Serializable]
 public class RoadTileHit {
     private int initTimeout = 60;
     public GameObject tile;
@@ -52,6 +58,7 @@ public class RoadTreeNode {
 
 public class RoadController : MonoBehaviour {
     public List<TileListItem> prefabTileList = new List<TileListItem>();
+    public List<SpeedSignItem> speedSignList = new List<SpeedSignItem>();
     public int eventDelay = 5;
     public int zoneSwitchDelay;
     public int zoneSwitchDelayFuzz;
@@ -112,6 +119,7 @@ public class RoadController : MonoBehaviour {
 
     private void SpawnNextTile () {
         // Switch zones when needed
+        bool zoneSwitched = false;
         if (currentZoneSwitchDelay <= 0) {
             if (currentTrafficZone == trafficzone.woonwijk)
                 currentTrafficZone++;
@@ -124,6 +132,7 @@ public class RoadController : MonoBehaviour {
                     currentTrafficZone--;
             }
             ResetZoneSwitchDelay();
+            zoneSwitched = true;
         } else {
             currentZoneSwitchDelay--;
         }
@@ -155,7 +164,7 @@ public class RoadController : MonoBehaviour {
         // Instantiate the next tile
         nextTile = Instantiate(
             nextTile, 
-            lastTile.transform.position + RotateOffset(lastTileScript.userExit.offset, lastTile.transform.rotation.eulerAngles) + RotateOffset(orientation.offset, lastTile.transform.rotation.eulerAngles + lastTileScript.userExit.rotation), 
+            lastTile.transform.position + lastTileScript.userExit.offset.RotateOffset(lastTile.transform.rotation.eulerAngles) + orientation.offset.RotateOffset(lastTile.transform.rotation.eulerAngles + lastTileScript.userExit.rotation), 
             Quaternion.Euler(lastTile.transform.rotation.eulerAngles + lastTileScript.userExit.rotation + orientation.rotation)
         );
 
@@ -166,6 +175,10 @@ public class RoadController : MonoBehaviour {
         // Set variables on new tile
         nextNode.tileScript.SetTrafficZone(currentTrafficZone);
         nextNode.tileScript.SetUserEntrance(orientation.entance);
+
+        // Create speed sign if needed
+        if (zoneSwitched)
+            nextNode.tileScript.SpawnTrafficSign(BestSpeedSign(currentTrafficZone.MaxSpeed()), orientation.entance, direction.left);
 
         // Set events and car paths
         SetTileEvent(nextNode);
@@ -195,6 +208,21 @@ public class RoadController : MonoBehaviour {
         }
     }
 
+    private GameObject BestSpeedSign (int maxSpeed) {
+        int bestSpeed = -1;
+        for (int i = 0; i < speedSignList.Count; i++) {
+            if (speedSignList[i].speed >= maxSpeed && (bestSpeed < 0 || speedSignList[i].speed < bestSpeed))
+                bestSpeed = speedSignList[i].speed;
+        }
+
+        List<SpeedSignItem> bestSigns = new List<SpeedSignItem>();
+        foreach (SpeedSignItem item in speedSignList) {
+            if (item.speed == bestSpeed)
+                bestSigns.Add(item);
+        }
+        return bestSigns[Random.Range(0, bestSigns.Count)].sign;
+    }
+
     private void AddToUserPath(RoadTilePath path) {
         List<PathNode> thisPath = new List<PathNode>();
         foreach (GameObject item in path.ghosts) {
@@ -206,10 +234,5 @@ public class RoadController : MonoBehaviour {
 
     private void ResetZoneSwitchDelay () {
         currentZoneSwitchDelay = Mathf.RoundToInt(Random.Range(currentTrafficZone.MaxSpeed() / (zoneSwitchDelay - zoneSwitchDelayFuzz), currentTrafficZone.MaxSpeed() / (zoneSwitchDelay + zoneSwitchDelayFuzz)));
-    }
-
-    private Vector3 RotateOffset (Vector3 offset, Vector3 rotation) {
-        float radians = Mathf.Deg2Rad * (rotation.y + rotation.z);
-        return offset.RotateAroundY(radians);
     }
 }
