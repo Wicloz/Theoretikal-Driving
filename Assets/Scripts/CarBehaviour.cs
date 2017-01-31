@@ -105,6 +105,10 @@ public class CarBehaviour : MonoBehaviour {
         }
     }
 
+    public void Brake () {
+        breakToTarget = true;
+    }
+
     private void SetZoneHud () {
         float maxSpeed = 0;
         if (pathFlat.Count > 0)

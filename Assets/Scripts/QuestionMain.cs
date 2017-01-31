@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
 public struct QuestionAnswer {
     public string answer;
     public bool correct;
@@ -11,7 +12,8 @@ public struct QuestionAnswer {
     }
 }
 
-public class QuestionMain : MonoBehaviour {
+[System.Serializable]
+public class QuestionMain {
     public string question = "";
     public List<QuestionAnswer> answers = new List<QuestionAnswer>();
 }

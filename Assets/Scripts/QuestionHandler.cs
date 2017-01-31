@@ -10,7 +10,12 @@ public class QuestionHandler : MonoBehaviour {
     public Color wrongColour;
 
     private int userAnswer = -1;
-    private bool questionActive = false;
+    private bool _questionActive = false;
+    public bool questionActive {
+        get {
+            return _questionActive;
+        }
+    }
 
     void Awake () {
         if (_static == null)
@@ -22,22 +27,22 @@ public class QuestionHandler : MonoBehaviour {
     }
 
     void Update () {
-        if (questionActive) {
+        if (_questionActive) {
             if (Mathf.Round(Input.GetAxis("horizontal")) == -1) {
                 userAnswer = 3;
-                questionActive = false;
+                _questionActive = false;
             }
             if (Mathf.Round(Input.GetAxis("horizontal")) == 1) {
                 userAnswer = 2;
-                questionActive = false;
+                _questionActive = false;
             }
             if (Mathf.Round(Input.GetAxis("vertical")) == -1) {
                 userAnswer = 1;
-                questionActive = false;
+                _questionActive = false;
             }
             if (Mathf.Round(Input.GetAxis("vertical")) == 1) {
                 userAnswer = 0;
-                questionActive = false;
+                _questionActive = false;
             }
 
             if (userAnswer != -1) {
@@ -49,6 +54,7 @@ public class QuestionHandler : MonoBehaviour {
     public void SetQuestion (QuestionMain question) {
         userAnswer = -1;
         questionObject.SetActive(true);
+        questionObject.GetComponent<Text>().text = question.question;
         for (int i = 0; i < question.answers.Count; i++) {
             buttonObjects[i].SetActive(true);
             buttonObjects[i].transform.FindChild("Text").GetComponent<Text>().text = question.answers[i].answer;
@@ -56,11 +62,11 @@ public class QuestionHandler : MonoBehaviour {
             buttonColours.pressedColor = question.answers[i].correct ? correctColour : wrongColour;
             buttonObjects[i].GetComponent<Button>().colors = buttonColours;
         }
-        questionActive = true;
+        _questionActive = true;
     }
 
     public int GetAnswer () {
-        questionActive = false;
+        _questionActive = false;
         questionObject.SetActive(false);
         foreach (GameObject button in buttonObjects) {
             button.SetActive(false);

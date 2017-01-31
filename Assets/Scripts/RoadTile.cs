@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public enum direction {forward, back, left, right};
+public enum direction {forward, back, left, right, center};
 
 [System.Serializable]
 public struct RoadTileOrientation {
@@ -77,12 +77,30 @@ public class RoadTile : MonoBehaviour {
 
     public void SpawnTrafficSign (GameObject sign, direction exit, direction side) {
         RoadTileExit betterExit = new RoadTileExit();
-        foreach (RoadTileExit item in exits) {
-            if (exit == item.dir) {
-                betterExit = item;
-                break;
+        if (exit == direction.center) {
+            betterExit.offset = Vector3.zero;
+            betterExit.rotation = Vector3.zero;
+            if (userEntrance.dir == direction.forward) {
+                switch (side) {
+                    case direction.left:
+                        side = direction.right;
+                        break;
+                    case direction.right:
+                        side = direction.left;
+                        break;
+                }
             }
         }
+
+        else {
+            foreach (RoadTileExit item in exits) {
+                if (exit == item.dir) {
+                    betterExit = item;
+                    break;
+                }
+            }
+        }
+
         Instantiate(sign, GetWorldSignPos(betterExit, side), GetWorldSignRot(betterExit, side), transform);
     }
 

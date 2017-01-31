@@ -42,6 +42,7 @@ public class RoadTreeNode {
             return _tileScript;
         }
     }
+    public EventMain eventScript = null;
 
     public RoadTreeNode () { }
     public RoadTreeNode (GameObject tile) {
@@ -63,13 +64,17 @@ public class RoadController : MonoBehaviour {
     public int zoneSwitchDelay;
     public int zoneSwitchDelayFuzz;
 
+    public static RoadController _static = null;
     private List<RoadTileHit> tilesHit = new List<RoadTileHit>();
     private List<RoadTreeNode> roadTree = new List<RoadTreeNode>();
     private int currentEventDelay;
     private int currentZoneSwitchDelay;
     private trafficzone currentTrafficZone = trafficzone.woonwijk;
+    public bool gameRunning = true;
 
     void Awake () {
+        if (_static == null)
+            _static = this;
         currentEventDelay = eventDelay;
         ResetZoneSwitchDelay();
         GameObject startRoad = GameObject.Find("StartRoad");
@@ -80,47 +85,73 @@ public class RoadController : MonoBehaviour {
     }
 
     void Update () {
-        // Handle spawning tiles
-        if (!CarRayCaster._static.FrontViewFull())
-            SpawnNextTile();
+        if (gameRunning) {
+            // Handle spawning tiles
+            if (!CarRayCaster._static.FrontViewFull())
+                SpawnNextTile();
 
-        // Manage the tile hit list
-        GameObject hitTile = CarRayCaster._static.TileStraightBack();
-        if (hitTile != null) {
-            bool added = false;
-            foreach (RoadTileHit item in tilesHit) {
-                if (item.tile == hitTile) {
-                    item.ResetTimeout();
-                    added = true;
-                    break;
-                }
-            }
-            if (!added)
-                tilesHit.Add(new RoadTileHit(hitTile));
-        }
+            // Handle question things
+            HandleQuestions();
 
-        // Delete old tiles
-        bool deleted = false;
-        for (int i = 0; i < tilesHit.Count; i++) {
-            tilesHit[i].timeout--;
-            if (!deleted && tilesHit[i].timeout < 0) {
-                if (tilesHit[i].tile != null) {
-                    foreach (RoadTreeNode node in roadTree) {
-                        node.Remove();
-                        if (node.tile == tilesHit[i].tile)
-                            break;
+            // Manage the tile hit list
+            GameObject hitTile = CarRayCaster._static.TileStraightBack();
+            if (hitTile != null) {
+                bool added = false;
+                foreach (RoadTileHit item in tilesHit) {
+                    if (item.tile == hitTile) {
+                        item.ResetTimeout();
+                        added = true;
+                        break;
                     }
                 }
-                tilesHit.RemoveAt(i);
-                deleted = true;
+                if (!added)
+                    tilesHit.Add(new RoadTileHit(hitTile));
+            }
+
+            // Delete old tiles
+            bool deleted = false;
+            for (int i = 0; i < tilesHit.Count; i++) {
+                tilesHit[i].timeout--;
+                if (!deleted && tilesHit[i].timeout < 0) {
+                    if (tilesHit[i].tile != null) {
+                        for (int j = 0; j < roadTree.Count; j++) {
+                            RoadTreeNode tempNode = roadTree[i];
+                            roadTree[i].Remove();
+                            roadTree.RemoveAt(i);
+                            if (tempNode.tile == tilesHit[i].tile)
+                                break;
+                        }
+                    }
+                    tilesHit.RemoveAt(i);
+                    deleted = true;
+                }
             }
         }
     } 
 
+    private void HandleQuestions () {
+        int currentCarPos = GetCurrentCarPos();
+
+        if (!QuestionHandler._static.questionActive) {
+            for (int i = currentCarPos; i < Mathf.Min(currentCarPos + 3, roadTree.Count); i++) {
+                if (roadTree[i].eventScript != null) {
+                    roadTree[i].eventScript.StartQuestion();
+                    break;
+                }
+            }
+        }
+
+        else if (roadTree.Count > currentCarPos + 1 && roadTree[currentCarPos + 1].eventScript != null && Vector3.Distance(CarBehaviour._static.transform.position, roadTree[currentCarPos + 1].tile.transform.position + roadTree[currentCarPos + 1].tileScript.userEntrance.offset.RotateOffset(roadTree[currentCarPos + 1].tile.transform.rotation.eulerAngles)) < 6)
+            roadTree[currentCarPos + 1].eventScript.EndQuestion();
+    }
+
     private void SpawnNextTile () {
+        // Has event
+        bool hasEvent = currentEventDelay <= 0;
+
         // Switch zones when needed
         bool zoneSwitched = false;
-        if (currentZoneSwitchDelay <= 0) {
+        if (currentZoneSwitchDelay <= 0 && !hasEvent) {
             if (currentTrafficZone == trafficzone.woonwijk)
                 currentTrafficZone++;
             else if (currentTrafficZone == trafficzone.onbebouwd)
@@ -181,17 +212,18 @@ public class RoadController : MonoBehaviour {
             nextNode.tileScript.SpawnTrafficSign(BestSpeedSign(currentTrafficZone.MaxSpeed()), orientation.entance, direction.left);
 
         // Set events and car paths
-        SetTileEvent(nextNode);
+        SetTileEvent(nextNode, hasEvent);
     }
 
-    private void SetTileEvent (RoadTreeNode node) {
+    private void SetTileEvent (RoadTreeNode node, bool hasEvent) {
         // Get event if needed
         EventMain tileEvent = null;
-        if (currentEventDelay <= 0 && node.tileScript.events.Count > 0) {
+        if (hasEvent && node.tileScript.events.Count > 0) {
             EventMain prefab = node.tileScript.GetRandomEvent();
             node.tile.AddComponent(prefab.GetType());
             tileEvent = (EventMain) node.tile.GetComponent(prefab.GetType());
             tileEvent.SetUp(node);
+            node.eventScript = tileEvent;
             currentEventDelay = eventDelay;
         }
         else {
@@ -234,5 +266,17 @@ public class RoadController : MonoBehaviour {
 
     private void ResetZoneSwitchDelay () {
         currentZoneSwitchDelay = Mathf.RoundToInt(Random.Range(currentTrafficZone.MaxSpeed() / (zoneSwitchDelay - zoneSwitchDelayFuzz), currentTrafficZone.MaxSpeed() / (zoneSwitchDelay + zoneSwitchDelayFuzz)));
+    }
+
+    private int GetCurrentCarPos () {
+        Vector3 carPosition = CarBehaviour._static.transform.position;
+
+        int closestNode = -1;
+        for (int i = 0; i < roadTree.Count; i++) {
+            if (closestNode < 0 || Vector3.Distance(carPosition, roadTree[i].tile.transform.position) < Vector3.Distance(carPosition, roadTree[closestNode].tile.transform.position))
+                closestNode = i;
+        }
+
+        return closestNode;
     }
 }

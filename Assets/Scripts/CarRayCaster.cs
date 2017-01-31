@@ -32,7 +32,7 @@ public class CarRayCaster : MonoBehaviour {
     public List<GameObject> TilesMultiFront (bool addSky = false) {
         List<GameObject> hits = new List<GameObject>();
 
-        for (float i = -1; i <= 1; i += 0.05f) {
+        for (float i = -1.5f; i <= 1.5f; i += 0.05f) {
             Vector3 direction = transform.forward.RotateAroundY(i);
             RaycastHit hit;
             float length = 999;
