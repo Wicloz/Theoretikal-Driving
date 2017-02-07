@@ -41,6 +41,7 @@ public class CarBehaviour : MonoBehaviour {
         }
     }
     private bool breakToTarget = false;
+    public bool isUser = true;
 
     public float breakTreshhold = 42;
     public float realSpeedMult = 1;
@@ -60,7 +61,11 @@ public class CarBehaviour : MonoBehaviour {
     }
 
     void FixedUpdate () {
-        if (pathFlat.Count > 0) {
+        if (!isUser && (pathFlat.Count <= 0 || pathFlat[0].ghost == null)) {
+            Destroy(this);
+        }
+
+        else if (pathFlat.Count > 0) {
             Transform currentTransform = gameObject.transform;
             float currentSpeed = carRigid.velocity.magnitude / realSpeedMult;
 

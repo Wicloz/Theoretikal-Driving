@@ -6,6 +6,7 @@ public class QuestionHandler : MonoBehaviour {
     public static QuestionHandler _static = null;
     public GameObject questionObject;
     public List<GameObject> buttonObjects;
+    public GameObject explanationObject;
     public Color correctColour;
     public Color wrongColour;
 
@@ -28,21 +29,25 @@ public class QuestionHandler : MonoBehaviour {
 
     void Update () {
         if (_questionActive) {
-            if (Mathf.Round(Input.GetAxis("horizontal")) == -1) {
+            if (Mathf.Round(Input.GetAxis("Horizontal")) == -1) {
                 userAnswer = 3;
                 _questionActive = false;
+                explanationObject.SetActive(true);
             }
-            if (Mathf.Round(Input.GetAxis("horizontal")) == 1) {
+            if (Mathf.Round(Input.GetAxis("Horizontal")) == 1) {
                 userAnswer = 2;
                 _questionActive = false;
+                explanationObject.SetActive(true);
             }
-            if (Mathf.Round(Input.GetAxis("vertical")) == -1) {
+            if (Mathf.Round(Input.GetAxis("Vertical")) == -1) {
                 userAnswer = 1;
                 _questionActive = false;
+                explanationObject.SetActive(true);
             }
-            if (Mathf.Round(Input.GetAxis("vertical")) == 1) {
+            if (Mathf.Round(Input.GetAxis("Vertical")) == 1) {
                 userAnswer = 0;
                 _questionActive = false;
+                explanationObject.SetActive(true);
             }
 
             if (userAnswer != -1) {
@@ -55,6 +60,7 @@ public class QuestionHandler : MonoBehaviour {
         userAnswer = -1;
         questionObject.SetActive(true);
         questionObject.GetComponent<Text>().text = question.question;
+        explanationObject.GetComponent<Text>().text = question.explanation;
         for (int i = 0; i < question.answers.Count; i++) {
             buttonObjects[i].SetActive(true);
             buttonObjects[i].transform.FindChild("Text").GetComponent<Text>().text = question.answers[i].answer;
@@ -68,6 +74,7 @@ public class QuestionHandler : MonoBehaviour {
     public int GetAnswer () {
         _questionActive = false;
         questionObject.SetActive(false);
+        explanationObject.SetActive(false);
         foreach (GameObject button in buttonObjects) {
             button.SetActive(false);
         }

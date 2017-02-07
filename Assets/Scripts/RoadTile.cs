@@ -59,6 +59,20 @@ public class RoadTile : MonoBehaviour {
         }
     }
 
+    public List<GameObject> CapUnusedRoads () {
+        List<GameObject> roads = new List<GameObject>();
+        foreach (RoadTileExit item in exits) {
+            if (item.dir != userExit.dir && item.dir != userEntrance.dir) {
+                roads.Add(Instantiate(
+                    RoadController._static.endRoad,
+                    transform.position + item.offset.RotateOffset(transform.rotation.eulerAngles),
+                    Quaternion.Euler(transform.rotation.eulerAngles + item.rotation)
+                ));
+            }
+        }
+        return roads;
+    }
+
     private Vector3 GetWorldSignPos (RoadTileExit exit, direction side) {
         Vector3 position = transform.position + exit.offset.RotateOffset(transform.rotation.eulerAngles);
         if (side == direction.right)

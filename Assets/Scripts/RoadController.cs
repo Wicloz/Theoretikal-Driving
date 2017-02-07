@@ -10,6 +10,14 @@ public class TileListItem {
 }
 
 [System.Serializable]
+public class CarListItem
+{
+    public GameObject car;
+    [Range(0, 100)]
+    public int chance = 50;
+}
+
+[System.Serializable]
 public class SpeedSignItem {
     public GameObject sign;
     public int speed;
@@ -60,9 +68,11 @@ public class RoadTreeNode {
 public class RoadController : MonoBehaviour {
     public List<TileListItem> prefabTileList = new List<TileListItem>();
     public List<SpeedSignItem> speedSignList = new List<SpeedSignItem>();
+    public List<CarListItem> prefabCarList = new List<CarListItem>();
     public int eventDelay = 5;
     public int zoneSwitchDelay;
     public int zoneSwitchDelayFuzz;
+    public GameObject endRoad;
 
     public static RoadController _static = null;
     private List<RoadTileHit> tilesHit = new List<RoadTileHit>();
@@ -87,8 +97,10 @@ public class RoadController : MonoBehaviour {
     void Update () {
         if (gameRunning) {
             // Handle spawning tiles
-            if (!CarRayCaster._static.FrontViewFull())
+            if (!CarRayCaster._static.FrontViewFull()) { 
                 SpawnNextTile();
+                //SpawnCars();
+            }
 
             // Handle question things
             HandleQuestions();
@@ -129,11 +141,21 @@ public class RoadController : MonoBehaviour {
         }
     } 
 
+    private void SpawnCars () {
+        RoadTreeNode lastNode = roadTree[roadTree.Count - 1];
+        GameObject car = Instantiate(
+            GetRandomCar().car,
+            lastNode.tile.transform.position + lastNode.tileScript.userExit.offset.RotateOffset(lastNode.tile.transform.rotation.eulerAngles) + new Vector3(-2.3f, 1, 0).RotateOffset(lastNode.tileScript.userExit.rotation),
+            Quaternion.Euler(lastNode.tile.transform.rotation.eulerAngles + lastNode.tileScript.userExit.rotation + new Vector3(0, 180, 0))
+        );
+        CarBehaviour carScript = car.GetComponent<CarBehaviour>();
+    }
+
     private void HandleQuestions () {
         int currentCarPos = GetCurrentCarPos();
 
         if (!QuestionHandler._static.questionActive) {
-            for (int i = currentCarPos; i < Mathf.Min(currentCarPos + 3, roadTree.Count); i++) {
+            for (int i = currentCarPos; i < Mathf.Min(currentCarPos + 2, roadTree.Count); i++) {
                 if (roadTree[i].eventScript != null) {
                     roadTree[i].eventScript.StartQuestion();
                     break;
@@ -141,7 +163,7 @@ public class RoadController : MonoBehaviour {
             }
         }
 
-        else if (roadTree.Count > currentCarPos + 1 && roadTree[currentCarPos + 1].eventScript != null && Vector3.Distance(CarBehaviour._static.transform.position, roadTree[currentCarPos + 1].tile.transform.position + roadTree[currentCarPos + 1].tileScript.userEntrance.offset.RotateOffset(roadTree[currentCarPos + 1].tile.transform.rotation.eulerAngles)) < 6)
+        else if (roadTree.Count > currentCarPos + 1 && roadTree[currentCarPos + 1].eventScript != null && Vector3.Distance(CarBehaviour._static.transform.position, roadTree[currentCarPos + 1].tile.transform.position + roadTree[currentCarPos + 1].tileScript.userEntrance.offset.RotateOffset(roadTree[currentCarPos + 1].tile.transform.rotation.eulerAngles)) < 8)
             roadTree[currentCarPos + 1].eventScript.EndQuestion();
     }
 
@@ -213,6 +235,9 @@ public class RoadController : MonoBehaviour {
 
         // Set events and car paths
         SetTileEvent(nextNode, hasEvent);
+
+        // Fix roads
+        //nextNode.children.AddRange(nextNode.tileScript.CapUnusedRoads());
     }
 
     private void SetTileEvent (RoadTreeNode node, bool hasEvent) {
@@ -278,5 +303,20 @@ public class RoadController : MonoBehaviour {
         }
 
         return closestNode;
+    }
+
+    private CarListItem GetRandomCar () {
+        int totalChance = 0;
+        foreach (CarListItem item in prefabCarList) {
+            totalChance += item.chance;
+        }
+        int randomChance = Random.Range(0, totalChance + 1);
+        foreach (CarListItem item in prefabCarList) {
+            randomChance -= item.chance;
+            if (randomChance <= 0) {
+                return item;
+            }
+        }
+        return null;
     }
 }
